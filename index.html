@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Signal Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f0f;
+  --surface: #1a1a1a;
+  --surface2: #222222;
+  --border: #2a2a2a;
+  --border2: #333333;
+  --text: #e8e8e4;
+  --text2: #888884;
+  --text3: #555552;
+  --green: #4ade80;
+  --green-dim: #1a3d26;
+  --amber: #fbbf24;
+  --amber-dim: #3d2e0a;
+  --blue: #60a5fa;
+  --blue-dim: #1a2a3d;
+  --red: #f87171;
+  --red-dim: #3d1a1a;
+  --accent: #4ade80;
+  --radius: 8px;
+  --radius-sm: 5px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+input, select, textarea, button { font-family: inherit; font-size: 14px; }
+input, select, textarea {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+textarea { min-height: 80px; resize: vertical; }
+select option { background: var(--surface2); }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Layout */
+.shell { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+.logo {
+  padding: 0 20px 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.logo-name { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+.logo-sub { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; margin-top: 2px; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  color: var(--text2);
+  cursor: pointer;
+  border-radius: 0;
+  transition: color 0.15s, background 0.15s;
+  font-size: 13px;
+  font-weight: 400;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.nav-item:hover { color: var(--text); background: var(--surface2); }
+.nav-item.active { color: var(--accent); background: rgba(74,222,128,0.07); }
+.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+.main { margin-left: 220px; padding: 32px 40px; max-width: 900px; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* Header */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+.page-title { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+.page-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface2); }
+.btn-primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+.btn-primary:hover { background: #22c55e; border-color: #22c55e; }
+.btn-success { background: var(--green-dim); color: var(--green); border-color: rgba(74,222,128,0.3); }
+.btn-success:hover { background: rgba(74,222,128,0.2); }
+.btn-ghost { border-color: transparent; color: var(--text2); }
+.btn-ghost:hover { color: var(--text); background: var(--surface2); }
+.btn-danger { color: var(--red); border-color: rgba(248,113,113,0.3); }
+.btn-danger:hover { background: var(--red-dim); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn svg { width: 14px; height: 14px; }
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 12px;
+}
+.card:last-child { margin-bottom: 0; }
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+.badge-today { background: var(--red-dim); color: var(--red); }
+.badge-week { background: var(--amber-dim); color: var(--amber); }
+.badge-file { background: var(--blue-dim); color: var(--blue); }
+.badge-new { background: var(--green-dim); color: var(--green); }
+.badge-reviewed { background: var(--amber-dim); color: var(--amber); }
+.badge-actioned { background: rgba(74,222,128,0.1); color: var(--green); }
+.badge-dismissed { background: var(--surface2); color: var(--text3); }
+
+/* Score dots */
+.score-wrap { display: flex; align-items: center; gap: 6px; }
+.score-dots { display: flex; gap: 3px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); }
+.dot.on { background: var(--accent); }
+.dot.mid { background: var(--amber); }
+.dot.low { background: var(--text3); }
+.score-num { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+/* Signal card */
+.signal-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 10px; transition: border-color 0.15s; }
+.signal-card:hover { border-color: var(--border2); }
+.signal-meta-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.signal-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.signal-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 4px; line-height: 1.4; letter-spacing: -0.2px; }
+.signal-source { font-size: 12px; color: var(--text3); margin-bottom: 10px; font-family: 'DM Mono', monospace; }
+.signal-why { font-size: 13px; color: var(--text2); margin-bottom: 10px; padding-left: 10px; border-left: 2px solid var(--border2); }
+.signal-angle { font-size: 13px; color: var(--text); margin-bottom: 8px; padding: 10px 12px; background: var(--surface2); border-radius: var(--radius-sm); }
+.signal-angle strong { color: var(--accent); font-size: 11px; font-family: 'DM Mono', monospace; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.signal-draft { font-size: 13px; color: var(--text2); font-style: italic; margin-bottom: 12px; padding: 10px 12px; background: var(--surface2); border-radius: var(--radius-sm); border-left: 2px solid var(--accent); }
+.signal-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.velocity { font-size: 11px; font-family: 'DM Mono', monospace; padding: 2px 7px; border-radius: 99px; }
+.velocity-rising { background: var(--green-dim); color: var(--green); }
+.velocity-stable { background: var(--surface2); color: var(--text3); }
+.velocity-fading { background: var(--amber-dim); color: var(--amber); }
+
+/* Cluster tag */
+.cluster-tag { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+/* Filter bar */
+.filter-bar { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+.filter-btn { padding: 5px 12px; border-radius: 99px; border: 1px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; font-size: 12px; font-family: 'DM Mono', monospace; transition: all 0.15s; }
+.filter-btn:hover { color: var(--text); border-color: var(--border2); }
+.filter-btn.active { background: var(--surface2); color: var(--text); border-color: var(--accent); }
+
+/* Digest bar */
+.digest-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.digest-label { font-size: 13px; color: var(--text2); }
+.digest-label strong { color: var(--text); }
+
+/* Sources */
+.source-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.source-row:last-child { border-bottom: none; }
+.source-info { flex: 1; }
+.source-name { font-size: 14px; font-weight: 500; }
+.source-meta { font-size: 12px; color: var(--text3); font-family: 'DM Mono', monospace; margin-top: 2px; }
+.toggle-wrap { display: flex; align-items: center; gap: 8px; }
+.toggle { width: 36px; height: 20px; border-radius: 10px; border: none; cursor: pointer; transition: background 0.2s; position: relative; padding: 0; }
+.toggle::after { content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: white; top: 3px; transition: left 0.2s; }
+.toggle.on { background: var(--accent); }
+.toggle.on::after { left: 19px; }
+.toggle.off { background: var(--border2); }
+.toggle.off::after { left: 3px; }
+.rss-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; margin-right: 4px; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(2px); }
+.modal { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); padding: 24px; width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; letter-spacing: -0.3px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-field label { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.5px; }
+.full { grid-column: 1 / -1; }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* Empty */
+.empty { text-align: center; padding: 48px 20px; color: var(--text3); }
+.empty-icon { font-size: 32px; margin-bottom: 12px; }
+.empty p { font-size: 14px; }
+
+/* Spinner */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: -3px; margin-right: 6px; }
+
+/* KV row */
+.kv { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.kv:last-child { border-bottom: none; }
+.kv-label { color: var(--text2); flex: 1; margin-right: 12px; }
+.kv-val { color: var(--text); font-weight: 500; font-family: 'DM Mono', monospace; flex-shrink: 0; }
+
+/* Toast */
+#toast { display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 10px 18px; font-size: 13px; color: var(--text); z-index: 200; white-space: nowrap; }
+
+/* Weekly cluster */
+.cluster-block { margin-bottom: 24px; }
+.cluster-title { font-size: 11px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.8px; color: var(--accent); margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-name">Signal Monitor</div>
+      <div class="logo-sub">LinkedIn intelligence</div>
+    </div>
+    <button class="nav-item active" onclick="showPage('signals', this)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+      Today's signals
+    </button>
+    <button class="nav-item" onclick="showPage('weekly', this)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M5 1v3M11 1v3M2 7h12"/></svg>
+      Weekly summary
+    </button>
+    <button class="nav-item" onclick="showPage('sources', this)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h5"/></svg>
+      Sources
+    </button>
+    <button class="nav-item" onclick="showPage('archived', this)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v2H2zM4 6v7h8V6"/><path d="M6 9h4"/></svg>
+      Archived
+    </button>
+  </aside>
+
+  <main class="main">
+    <!-- SIGNALS -->
+    <div id="page-signals" class="page active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Today's signals</div>
+          <div class="page-sub" id="signal-count">Loading...</div>
+        </div>
+        <button class="btn btn-primary" onclick="showAddSignalModal()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
+          Add signal
+        </button>
+      </div>
+      <div class="digest-bar">
+        <div class="digest-label"><strong>Morning digest</strong> — pulls MEED, Construction News, Infrastructure Intelligence automatically</div>
+        <button class="btn btn-success" id="btn-digest" onclick="runDigest()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 8A6 6 0 1 1 8 2"/><path d="M14 2v4h-4"/></svg>
+          Run now
+        </button>
+      </div>
+      <div class="filter-bar" id="urgency-filter">
+        <button class="filter-btn active" onclick="filterSignals('all', this)">All</button>
+        <button class="filter-btn" onclick="filterSignals('today', this)">Post today</button>
+        <button class="filter-btn" onclick="filterSignals('this_week', this)">This week</button>
+        <button class="filter-btn" onclick="filterSignals('file', this)">File for later</button>
+      </div>
+      <div id="signals-list">
+        <div class="empty"><div class="empty-icon">◎</div><p>No signals yet. Hit "Run now" to pull from your sources.</p></div>
+      </div>
+    </div>
+
+    <!-- WEEKLY -->
+    <div id="page-weekly" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Weekly summary</div>
+          <div class="page-sub">W/C <span id="week-label"></span></div>
+        </div>
+      </div>
+      <div id="weekly-content"><div class="empty"><div class="empty-icon">◎</div><p>No signals this week yet.</p></div></div>
+    </div>
+
+    <!-- SOURCES -->
+    <div id="page-sources" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Monitored sources</div>
+          <div class="page-sub">RSS-enabled sources run automatically. Others are manual only.</div>
+        </div>
+        <button class="btn" onclick="showAddSourceModal()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
+          Add source
+        </button>
+      </div>
+      <div class="card" id="sources-list"><div class="empty"><p>Loading...</p></div></div>
+    </div>
+
+    <!-- ARCHIVED -->
+    <div id="page-archived" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Archived</div>
+          <div class="page-sub">Dismissed and actioned signals.</div>
+        </div>
+      </div>
+      <div id="archived-list"><div class="empty"><div class="empty-icon">◎</div><p>No archived signals.</p></div></div>
+    </div>
+  </main>
+</div>
+
+<!-- ADD SIGNAL MODAL -->
+<div id="modal-add-signal" style="display:none;">
+  <div class="modal-overlay" onclick="closeModal('modal-add-signal')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title">Add signal manually</div>
+      <div class="form-grid">
+        <div class="form-field full"><label>Headline</label><input type="text" id="sig-headline" placeholder="e.g. Saudi Arabia fast-tracks NCV accommodation framework" /></div>
+        <div class="form-field full"><label>Summary</label><textarea id="sig-summary" placeholder="Paste a few sentences from the article..."></textarea></div>
+        <div class="form-field"><label>Source URL</label><input type="text" id="sig-url" placeholder="https://..." /></div>
+        <div class="form-field"><label>Published date</label><input type="date" id="sig-date" /></div>
+        <div class="form-field"><label>Topic cluster</label>
+          <select id="sig-cluster">
+            <option value="fifa_2034_saudi">FIFA 2034 / Saudi</option>
+            <option value="programme_delivery">Programme delivery</option>
+            <option value="mega_event_governance">Mega-event governance</option>
+            <option value="deal_origination">Deal origination</option>
+            <option value="operator_business">Operator / business</option>
+            <option value="ai_operational">AI operational</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Source</label><select id="sig-source"><option value="">No source</option></select></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-add-signal')">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-signal" onclick="saveSignalAndAnalyse()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5 6.5 5z"/></svg>
+          Save & analyse
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD SOURCE MODAL -->
+<div id="modal-add-source" style="display:none;">
+  <div class="modal-overlay" onclick="closeModal('modal-add-source')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title">Add source</div>
+      <div class="form-grid">
+        <div class="form-field full"><label>Name</label><input type="text" id="src-name" placeholder="e.g. Construction Enquirer" /></div>
+        <div class="form-field"><label>Type</label>
+          <select id="src-type"><option value="news">News</option><option value="linkedin">LinkedIn</option><option value="report">Report</option><option value="government">Government</option></select>
+        </div>
+        <div class="form-field"><label>Topic cluster</label>
+          <select id="src-cluster">
+            <option value="programme_delivery">Programme delivery</option>
+            <option value="fifa_2034_saudi">FIFA 2034 / Saudi</option>
+            <option value="mega_event_governance">Mega-event governance</option>
+            <option value="deal_origination">Deal origination</option>
+            <option value="operator_business">Operator / business</option>
+            <option value="ai_operational">AI operational</option>
+          </select>
+        </div>
+        <div class="form-field full"><label>RSS feed URL</label><input type="text" id="src-rss" placeholder="https://example.com/feed/" /></div>
+        <div class="form-field full"><label>Website URL (optional)</label><input type="text" id="src-url" placeholder="https://..." /></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-add-source')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSource()">Save source</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PUSH CALENDAR MODAL -->
+<div id="modal-push-calendar" style="display:none;">
+  <div class="modal-overlay" onclick="closeModal('modal-push-calendar')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title">Push to content calendar</div>
+      <div class="form-grid">
+        <div class="form-field full"><label>Post title</label><input type="text" id="cal-title" /></div>
+        <div class="form-field"><label>Post type</label><select id="cal-type"><option value="post">Short post</option><option value="article">Article</option></select></div>
+        <div class="form-field"><label>Link to project</label><select id="cal-project"><option value="">No project</option></select></div>
+        <div class="form-field full"><label>Notes</label><textarea id="cal-notes"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-push-calendar')">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmPushCalendar()">Add to calendar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://pkfnbxtwgpjqtqwpicax.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_PkM6hfcVKwEF4F2nOZEssQ_5svjz2E-';
+const ANALYSE_FN = SUPABASE_URL + '/functions/v1/analyse-signal';
+const INGEST_FN = SUPABASE_URL + '/functions/v1/ingest-rss-signals';
+
+const CLUSTER_LABELS = {
+  fifa_2034_saudi: 'FIFA 2034 / Saudi',
+  programme_delivery: 'Programme delivery',
+  mega_event_governance: 'Mega-event governance',
+  deal_origination: 'Deal origination',
+  operator_business: 'Operator / business',
+  ai_operational: 'AI operational'
+};
+
+let allSignals = [], sources = [], projects = [];
+let currentFilter = 'all', pendingPushSignalId = null;
+
+async function sb(path, opts = {}) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || 'return=representation',
+      ...opts.headers
+    },
+    method: opts.method || 'GET',
+    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined
+  });
+  if (!res.ok) { const e = await res.text(); throw new Error(e); }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+async function callFn(url, body) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY
+    },
+    body: JSON.stringify(body || {})
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data;
+}
+
+function showPage(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  btn.classList.add('active');
+  if (page === 'sources') renderSources();
+  if (page === 'archived') renderArchived();
+  if (page === 'weekly') renderWeekly();
+}
+
+function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+function toast(msg, dur = 3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.style.display = 'none', dur);
+}
+
+function urgencyBadge(u) {
+  const map = { today: ['badge-today','TODAY'], this_week: ['badge-week','THIS WEEK'], file: ['badge-file','FILE'] };
+  const [cls, label] = map[u] || map.file;
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function statusBadge(s) {
+  return `<span class="badge badge-${s}">${s.toUpperCase()}</span>`;
+}
+function velocityBadge(v) {
+  return `<span class="velocity velocity-${v||'stable'}">${v||'stable'}</span>`;
+}
+function scoreDots(score) {
+  let h = '<div class="score-dots">';
+  for (let i=1;i<=10;i++) {
+    const cls = i<=score ? (score>=7?'on':score>=4?'mid':'low') : '';
+    h += `<div class="dot ${cls}"></div>`;
+  }
+  return h + '</div>';
+}
+
+function renderSignals(signals) {
+  const c = document.getElementById('signals-list');
+  const active = signals.filter(s => s.status !== 'dismissed' && s.status !== 'actioned');
+  document.getElementById('signal-count').textContent = active.length + ' active signal' + (active.length !== 1 ? 's' : '');
+  if (!active.length) {
+    c.innerHTML = '<div class="empty"><div class="empty-icon">◎</div><p>No active signals. Hit "Run now" to pull from your sources, or add one manually.</p></div>';
+    return;
+  }
+  c.innerHTML = active.map(s => {
+    const raw = s.raw_signal_id_data || {};
+    const hostname = (() => { try { return raw.url ? new URL(raw.url).hostname : ''; } catch(e) { return ''; } })();
+    const safe = t => (t||'').replace(/\\/g,'\\\\').replace(/`/g,"'").replace(/\n/g,' ');
+    return `<div class="signal-card">
+      <div class="signal-meta-row">
+        <div class="signal-badges">
+          ${urgencyBadge(s.urgency)}
+          ${statusBadge(s.status)}
+          <span class="cluster-tag">${CLUSTER_LABELS[raw.topic_cluster]||''}</span>
+        </div>
+        <div class="score-wrap">
+          ${scoreDots(s.relevance_score||0)}
+          <span class="score-num">${s.relevance_score||'?'}/10</span>
+        </div>
+      </div>
+      <div class="signal-title">${raw.headline||'Untitled'}</div>
+      <div class="signal-source">${hostname?`<a href="${raw.url}" target="_blank">${hostname}</a> · `:''}${raw.published_date?new Date(raw.published_date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):''} · ${velocityBadge(s.trend_velocity)}</div>
+      ${s.why_relevant ? `<div class="signal-why">${s.why_relevant}</div>` : ''}
+      ${s.suggested_angle ? `<div class="signal-angle"><strong>Angle</strong>${s.suggested_angle}</div>` : ''}
+      ${s.draft_paragraph ? `<div class="signal-draft">${s.draft_paragraph}</div>` : ''}
+      <div class="signal-actions">
+        <button class="btn btn-primary" onclick="pushToCalendar('${s.id}',\`${safe(raw.headline)}\`,\`${safe(s.suggested_angle)}\`,\`${safe(s.draft_paragraph)}\`)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M5 1v3M11 1v3M2 7h12M8 10v3M6.5 11.5H9.5"/></svg>
+          Push to calendar
+        </button>
+        <button class="btn" onclick="updateStatus('${s.id}','reviewed')">Mark reviewed</button>
+        <button class="btn btn-danger" onclick="updateStatus('${s.id}','dismissed')">Dismiss</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterSignals(urgency, btn) {
+  currentFilter = urgency;
+  document.querySelectorAll('#urgency-filter .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSignals(urgency==='all' ? allSignals : allSignals.filter(s=>s.urgency===urgency));
+}
+
+async function loadSignals() {
+  try {
+    const ps = await sb('processed_signals?select=*,raw_signal_id_data:raw_signals(*)&order=created_at.desc&deleted_at=is.null');
+    allSignals = (ps||[]).map(s=>({...s, raw_signal_id_data: Array.isArray(s.raw_signal_id_data)?s.raw_signal_id_data[0]:s.raw_signal_id_data}));
+    renderSignals(currentFilter==='all' ? allSignals : allSignals.filter(s=>s.urgency===currentFilter));
+  } catch(e) {
+    document.getElementById('signals-list').innerHTML = `<div class="empty"><p>Could not load signals: ${e.message}</p></div>`;
+  }
+}
+
+async function runDigest() {
+  const btn = document.getElementById('btn-digest');
+  btn.innerHTML = '<span class="spin"></span>Running digest...';
+  btn.disabled = true;
+  try {
+    const result = await callFn(INGEST_FN, {});
+    toast(`Digest complete. ${result.processed||0} new signals, ${result.skipped||0} skipped.`, 5000);
+    await loadSignals();
+  } catch(e) {
+    toast('Digest error: ' + e.message, 5000);
+  } finally {
+    btn.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 8A6 6 0 1 1 8 2"/><path d="M14 2v4h-4"/></svg> Run now';
+    btn.disabled = false;
+  }
+}
+
+async function renderArchived() {
+  try {
+    const ps = await sb('processed_signals?select=*,raw_signal_id_data:raw_signals(*)&or=(status.eq.dismissed,status.eq.actioned)&order=created_at.desc&deleted_at=is.null');
+    const signals = (ps||[]).map(s=>({...s, raw_signal_id_data: Array.isArray(s.raw_signal_id_data)?s.raw_signal_id_data[0]:s.raw_signal_id_data}));
+    const c = document.getElementById('archived-list');
+    if (!signals.length) { c.innerHTML='<div class="empty"><div class="empty-icon">◎</div><p>No archived signals.</p></div>'; return; }
+    c.innerHTML = signals.map(s => {
+      const raw = s.raw_signal_id_data||{};
+      return `<div class="signal-card">
+        <div class="signal-meta-row"><div class="signal-badges">${statusBadge(s.status)} ${urgencyBadge(s.urgency)}</div></div>
+        <div class="signal-title">${raw.headline||'Untitled'}</div>
+        <div class="signal-source">${raw.published_date?new Date(raw.published_date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):''}</div>
+        <button class="btn" style="margin-top:10px;" onclick="updateStatus('${s.id}','new')">Restore</button>
+      </div>`;
+    }).join('');
+  } catch(e) { document.getElementById('archived-list').innerHTML=`<div class="empty"><p>Could not load: ${e.message}</p></div>`; }
+}
+
+async function renderWeekly() {
+  const now = new Date(), monday = new Date(now);
+  monday.setDate(now.getDate()-((now.getDay()+6)%7));
+  document.getElementById('week-label').textContent = monday.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  try {
+    const ps = await sb('processed_signals?select=*,raw_signal_id_data:raw_signals(*)&order=relevance_score.desc&deleted_at=is.null&limit=30');
+    const signals = (ps||[]).map(s=>({...s, raw_signal_id_data: Array.isArray(s.raw_signal_id_data)?s.raw_signal_id_data[0]:s.raw_signal_id_data}));
+    const c = document.getElementById('weekly-content');
+    if (!signals.length) { c.innerHTML='<div class="empty"><div class="empty-icon">◎</div><p>No signals this week yet.</p></div>'; return; }
+    const byCluster = {};
+    signals.forEach(s=>{ const cl=s.raw_signal_id_data?.topic_cluster||'other'; if(!byCluster[cl])byCluster[cl]=[]; byCluster[cl].push(s); });
+    c.innerHTML = Object.entries(byCluster).map(([cluster,sigs])=>`
+      <div class="cluster-block">
+        <div class="cluster-title">${CLUSTER_LABELS[cluster]||cluster}</div>
+        <div class="card">${sigs.slice(0,5).map(s=>`<div class="kv"><span class="kv-label">${s.raw_signal_id_data?.headline||'Signal'}</span><span class="kv-val">${s.relevance_score||'?'}/10</span></div>`).join('')}</div>
+      </div>`).join('');
+  } catch(e) { document.getElementById('weekly-content').innerHTML=`<div class="empty"><p>Could not load: ${e.message}</p></div>`; }
+}
+
+async function renderSources() {
+  try {
+    sources = await sb('monitored_sources?order=name.asc&deleted_at=is.null')||[];
+    const c = document.getElementById('sources-list');
+    if (!sources.length) { c.innerHTML='<div class="empty"><p>No sources yet.</p></div>'; return; }
+    c.innerHTML = sources.map(s=>`
+      <div class="source-row">
+        <div class="source-info">
+          <div class="source-name">${s.name}</div>
+          <div class="source-meta">${s.source_type} · ${CLUSTER_LABELS[s.topic_cluster]||s.topic_cluster}${s.rss_url?` · <span style="color:var(--accent);"><span class="rss-dot"></span>RSS</span>':' · manual'}</div>
+        </div>
+        ${s.url?`<a href="${s.url}" target="_blank" class="btn btn-ghost" style="padding:4px 8px; font-size:12px;">↗</a>`:''}
+        <button class="toggle ${s.active?'on':'off'}" onclick="toggleSource('${s.id}',${s.active})" title="${s.active?'Active — click to deactivate':'Inactive — click to activate'}"></button>
+      </div>`).join('');
+  } catch(e) { document.getElementById('sources-list').innerHTML=`<div class="empty"><p>Could not load: ${e.message}</p></div>`; }
+}
+
+async function toggleSource(id, current) {
+  await sb(`monitored_sources?id=eq.${id}`,{method:'PATCH',body:{active:!current},prefer:'return=minimal'});
+  renderSources();
+}
+
+function showAddSignalModal() {
+  document.getElementById('sig-headline').value='';
+  document.getElementById('sig-summary').value='';
+  document.getElementById('sig-url').value='';
+  document.getElementById('sig-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('sig-source').innerHTML='<option value="">No source</option>'+sources.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  showModal('modal-add-signal');
+}
+
+function showAddSourceModal() {
+  ['src-name','src-rss','src-url'].forEach(id=>document.getElementById(id).value='');
+  showModal('modal-add-source');
+}
+
+async function saveSource() {
+  const name = document.getElementById('src-name').value.trim();
+  if (!name) { toast('Name is required'); return; }
+  await sb('monitored_sources',{method:'POST',body:{name,source_type:document.getElementById('src-type').value,topic_cluster:document.getElementById('src-cluster').value,rss_url:document.getElementById('src-rss').value||null,url:document.getElementById('src-url').value||null}});
+  closeModal('modal-add-source');
+  toast('Source added');
+  renderSources();
+}
+
+async function saveSignalAndAnalyse() {
+  const headline = document.getElementById('sig-headline').value.trim();
+  const summary = document.getElementById('sig-summary').value.trim();
+  if (!headline) { toast('Headline is required'); return; }
+  const btn = document.getElementById('btn-save-signal');
+  btn.innerHTML='<span class="spin"></span>Analysing...'; btn.disabled=true;
+  try {
+    const rawRes = await sb('raw_signals',{method:'POST',body:{headline,summary:summary||null,url:document.getElementById('sig-url').value||null,published_date:document.getElementById('sig-date').value||null,topic_cluster:document.getElementById('sig-cluster').value,source_id:document.getElementById('sig-source').value||null,raw_payload:{headline,summary}}});
+    const rawId = rawRes[0].id;
+    const analysis = await callFn(ANALYSE_FN, {headline, summary, topic_cluster: document.getElementById('sig-cluster').value});
+    await sb('processed_signals',{method:'POST',body:{raw_signal_id:rawId,relevance_score:analysis.relevance_score,trend_velocity:analysis.trend_velocity,why_relevant:analysis.why_relevant,suggested_angle:analysis.suggested_angle,draft_paragraph:analysis.draft_paragraph,urgency:analysis.urgency,status:'new'}});
+    closeModal('modal-add-signal');
+    toast('Signal saved and analysed');
+    await loadSignals();
+  } catch(e) { toast('Error: '+e.message, 5000); }
+  finally { btn.innerHTML='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5 6.5 5z"/></svg> Save & analyse'; btn.disabled=false; }
+}
+
+async function updateStatus(id, status) {
+  await sb(`processed_signals?id=eq.${id}`,{method:'PATCH',body:{status},prefer:'return=minimal'});
+  toast(status==='dismissed'?'Dismissed':'Status updated');
+  await loadSignals();
+}
+
+function pushToCalendar(signalId, headline, angle, draft) {
+  pendingPushSignalId = signalId;
+  document.getElementById('cal-title').value = headline;
+  document.getElementById('cal-notes').value = `Angle: ${angle}\n\nDraft: ${draft}`;
+  document.getElementById('cal-project').innerHTML = '<option value="">No project</option>'+projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  showModal('modal-push-calendar');
+}
+
+async function confirmPushCalendar() {
+  const title = document.getElementById('cal-title').value.trim();
+  if (!title) { toast('Title is required'); return; }
+  await sb('posts',{method:'POST',body:{title,post_type:document.getElementById('cal-type').value,status:'idea',notes:document.getElementById('cal-notes').value,project_id:document.getElementById('cal-project').value||null}});
+  if (pendingPushSignalId) await sb(`processed_signals?id=eq.${pendingPushSignalId}`,{method:'PATCH',body:{status:'actioned'},prefer:'return=minimal'});
+  closeModal('modal-push-calendar');
+  toast('Added to content calendar');
+  await loadSignals();
+}
+
+async function init() {
+  const monday = new Date();
+  monday.setDate(monday.getDate()-((monday.getDay()+6)%7));
+  projects = await sb('projects?order=name.asc').catch(()=>[]) || [];
+  await Promise.all([loadSignals(), renderSources()]);
+}
+
+init();
+</script>
+</body>
+</html>
