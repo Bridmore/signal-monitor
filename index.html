@@ -6,542 +6,577 @@
 <title>Signal Monitor</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f0f0f;--s:#1a1a1a;--s2:#222;--b:#2a2a2a;--b2:#333;--t:#e8e8e4;--t2:#888884;--t3:#555552;--g:#4ade80;--gd:#1a3d26;--am:#fbbf24;--amd:#3d2e0a;--bl:#60a5fa;--bld:#1a2a3d;--r:#f87171;--rd:#3d1a1a;--ac:#4ade80;--rad:8px;--rads:5px;}
+:root{--bg:#0f0f0f;--s:#1a1a1a;--s2:#222;--b:#2a2a2a;--b2:#333;--t:#e8e8e4;--t2:#888884;--t3:#555552;--g:#4ade80;--gd:#0d2b1a;--am:#fbbf24;--amd:#2e200a;--bl:#60a5fa;--bld:#0f1e33;--r:#f87171;--rd:#2e0f0f;--ac:#4ade80;--rad:8px;--rads:5px;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--t);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;}
-input,select,textarea,button{font-family:inherit;font-size:14px;}
-input,select,textarea{background:var(--s2);border:1px solid var(--b2);color:var(--t);border-radius:var(--rads);padding:8px 10px;width:100%;outline:none;}
+body{background:var(--bg);color:var(--t);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;min-height:100vh;}
+button,input,select,textarea{font-family:inherit;font-size:14px;}
+input,select,textarea{background:var(--s2);border:1px solid var(--b2);color:var(--t);border-radius:var(--rads);padding:8px 10px;width:100%;outline:none;transition:border-color .15s;}
 input:focus,select:focus,textarea:focus{border-color:var(--ac);}
 textarea{min-height:80px;resize:vertical;}
 select option{background:var(--s2);}
 a{color:var(--bl);text-decoration:none;}
+
 .shell{display:flex;min-height:100vh;}
-.sidebar{width:220px;flex-shrink:0;background:var(--s);border-right:1px solid var(--b);padding:24px 0;position:fixed;top:0;left:0;bottom:0;}
-.logo{padding:0 20px 24px;border-bottom:1px solid var(--b);margin-bottom:16px;}
-.logo-name{font-size:15px;font-weight:600;}
-.logo-sub{font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;}
-.nav-item{display:flex;align-items:center;padding:9px 20px;color:var(--t2);cursor:pointer;font-size:13px;border:none;background:none;width:100%;text-align:left;}
+.sidebar{width:210px;flex-shrink:0;background:var(--s);border-right:1px solid var(--b);padding:0;position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;overflow-y:auto;}
+.logo{padding:20px 18px 16px;border-bottom:1px solid var(--b);}
+.logo-name{font-size:14px;font-weight:600;letter-spacing:.02em;}
+.logo-sub{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:2px;}
+.nav{padding:10px 0;flex:1;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 18px;color:var(--t2);cursor:pointer;font-size:13px;border:none;background:none;width:100%;text-align:left;transition:color .15s,background .15s;border-left:2px solid transparent;}
 .nav-item:hover{color:var(--t);background:var(--s2);}
-.nav-item.active{color:var(--ac);background:rgba(74,222,128,0.07);}
-.main{margin-left:220px;padding:32px 40px;max-width:900px;}
+.nav-item.active{color:var(--t);background:var(--s2);border-left-color:var(--ac);}
+.nav-icon{width:16px;text-align:center;font-size:13px;flex-shrink:0;}
+.nav-badge{margin-left:auto;background:var(--am);color:#000;font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px;min-width:18px;text-align:center;}
+.nav-sep{height:1px;background:var(--b);margin:8px 0;}
+
+.main{margin-left:210px;flex:1;padding:28px 32px;max-width:900px;}
 .page{display:none;}
 .page.active{display:block;}
-.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
-.pt{font-size:22px;font-weight:600;letter-spacing:-0.5px;}
-.ps{font-size:13px;color:var(--t2);margin-top:2px;}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--rads);border:1px solid var(--b2);background:transparent;color:var(--t);cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap;}
-.btn:hover{background:var(--s2);}
-.btn-p{background:var(--ac);color:#000;border-color:var(--ac);font-weight:600;}
-.btn-p:hover{background:#22c55e;}
-.btn-g{background:var(--gd);color:var(--g);border-color:rgba(74,222,128,0.3);}
-.btn-gh{border-color:transparent;color:var(--t2);}
-.btn-d{color:var(--r);border-color:rgba(248,113,113,0.3);}
-.btn-d:hover{background:var(--rd);}
-.btn:disabled{opacity:0.5;cursor:not-allowed;}
-.card{background:var(--s);border:1px solid var(--b);border-radius:var(--rad);padding:18px 20px;margin-bottom:12px;}
-.bdg{display:inline-flex;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;font-family:'DM Mono',monospace;text-transform:uppercase;}
-.bt{background:var(--rd);color:var(--r);}
-.bw{background:var(--amd);color:var(--am);}
-.bf{background:var(--bld);color:var(--bl);}
-.bn{background:var(--gd);color:var(--g);}
-.brev{background:var(--amd);color:var(--am);}
-.bact{background:rgba(74,222,128,0.1);color:var(--g);}
-.bdis{background:var(--s2);color:var(--t3);}
-.sw{display:flex;align-items:center;gap:6px;}
-.sd{display:flex;gap:3px;}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--b2);}
-.don{background:var(--ac);}
-.dmd{background:var(--am);}
-.dlw{background:var(--t3);}
-.sn{font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;}
-.sc{background:var(--s);border:1px solid var(--b);border-radius:var(--rad);padding:18px 20px;margin-bottom:10px;}
-.smr{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
-.sbd{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
-.stl{font-size:15px;font-weight:500;margin-bottom:4px;line-height:1.4;}
-.ssrc{font-size:12px;color:var(--t3);margin-bottom:10px;font-family:'DM Mono',monospace;}
-.swy{font-size:13px;color:var(--t2);margin-bottom:10px;padding-left:10px;border-left:2px solid var(--b2);}
-.san{font-size:13px;margin-bottom:8px;padding:10px 12px;background:var(--s2);border-radius:var(--rads);}
-.san strong{color:var(--ac);font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;display:block;margin-bottom:4px;}
-.sdr{font-size:13px;color:var(--t2);font-style:italic;margin-bottom:12px;padding:10px 12px;background:var(--s2);border-radius:var(--rads);border-left:2px solid var(--ac);}
-.sac{display:flex;gap:8px;flex-wrap:wrap;}
-.vel{font-size:11px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:99px;}
-.vr{background:var(--gd);color:var(--g);}
-.vs{background:var(--s2);color:var(--t3);}
-.vf{background:var(--amd);color:var(--am);}
-.ctg{font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;}
-.fb{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
-.fbn{padding:5px 12px;border-radius:99px;border:1px solid var(--b2);background:transparent;color:var(--t2);cursor:pointer;font-size:12px;font-family:'DM Mono',monospace;}
-.fbn.active{background:var(--s2);color:var(--t);border-color:var(--ac);}
-.dbar{background:var(--s);border:1px solid var(--b);border-radius:var(--rad);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
-.dlbl{font-size:13px;color:var(--t2);}
-.dlbl strong{color:var(--t);}
-.sr{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--b);}
-.sr:last-child{border-bottom:none;}
-.sri{flex:1;}
-.srn{font-size:14px;font-weight:500;}
-.srm{font-size:12px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:2px;}
-.tgl{width:36px;height:20px;border-radius:10px;border:none;cursor:pointer;position:relative;padding:0;}
-.tgl::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:white;top:3px;transition:left 0.2s;}
-.tgl.on{background:var(--ac);}
-.tgl.on::after{left:19px;}
-.tgl.off{background:var(--b2);}
-.tgl.off::after{left:3px;}
-.mo{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100;}
-.md{background:var(--s);border:1px solid var(--b2);border-radius:var(--rad);padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;}
-.mtt{font-size:16px;font-weight:600;margin-bottom:20px;}
-.fg{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
-.ff{display:flex;flex-direction:column;gap:6px;}
-.ff label{font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;}
-.full{grid-column:1/-1;}
-.mf{display:flex;gap:8px;justify-content:flex-end;}
+
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.page-title{font-size:18px;font-weight:600;}
+.page-meta{font-size:12px;color:var(--t3);font-family:'DM Mono',monospace;}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
+.stat-card{background:var(--s);border:1px solid var(--b);border-radius:var(--rad);padding:14px 16px;}
+.stat-n{font-size:24px;font-weight:600;line-height:1;}
+.stat-l{font-size:11px;color:var(--t2);margin-top:4px;text-transform:uppercase;letter-spacing:.06em;}
+
+.section-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;}
+
+.checks-card{background:var(--s);border:1px solid var(--b);border-radius:var(--rad);overflow:hidden;margin-bottom:24px;}
+.checks-group-header{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--s2);border-bottom:1px solid var(--b);}
+.checks-group-title{font-size:12px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;}
+.checks-group-count{margin-left:auto;font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;}
+.check-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--b);flex-wrap:wrap;transition:opacity .2s,background .15s;}
+.check-row:last-child{border-bottom:none;}
+.check-row.done{opacity:.3;pointer-events:none;}
+.check-row:hover{background:rgba(255,255,255,.02);}
+.check-name{font-size:13px;font-weight:500;flex:1;min-width:140px;}
+.check-cluster{font-size:11px;color:var(--t3);}
+.check-days{font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;}
+.badge{font-size:10px;padding:2px 7px;border-radius:20px;white-space:nowrap;font-weight:500;}
+.badge-pay{background:var(--rd);color:var(--r);border:1px solid rgba(248,113,113,.2);}
+.badge-rep{background:var(--bld);color:var(--bl);border:1px solid rgba(96,165,250,.2);}
+.all-clear{display:flex;align-items:center;gap:8px;padding:14px 16px;color:var(--g);font-size:13px;}
+
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--rads);border:1px solid var(--b2);background:transparent;color:var(--t2);cursor:pointer;font-size:12px;transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--t3);color:var(--t);background:var(--s2);}
+.btn-primary{border-color:var(--ac);color:var(--ac);}
+.btn-primary:hover{background:var(--gd);color:var(--g);}
+.btn-sm{padding:4px 9px;font-size:11px;}
+.btn-open{border-color:var(--b2);}
+.btn-check{border-color:rgba(74,222,128,.3);color:var(--g);}
+.btn-check:hover{background:var(--gd);}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.tab{padding:5px 12px;border-radius:20px;border:1px solid var(--b);background:transparent;cursor:pointer;font-size:12px;color:var(--t2);transition:all .15s;}
+.tab:hover{border-color:var(--t3);color:var(--t);}
+.tab.active{background:var(--t);color:var(--bg);border-color:var(--t);}
+
+.signals-list{display:flex;flex-direction:column;gap:10px;}
+.signal-card{background:var(--s);border:1px solid var(--b);border-radius:var(--rad);padding:16px;transition:border-color .15s;}
+.signal-card:hover{border-color:var(--b2);}
+.signal-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.signal-score{font-size:20px;font-weight:600;line-height:1;min-width:24px;}
+.score-high{color:var(--g);}
+.score-mid{color:var(--am);}
+.score-low{color:var(--t3);}
+.signal-headline{font-size:14px;font-weight:500;flex:1;line-height:1.4;}
+.signal-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.urgency-today{background:var(--rd);color:var(--r);font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+.urgency-week{background:var(--amd);color:var(--am);font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+.urgency-file{background:var(--s2);color:var(--t3);font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+.velocity-rising{color:var(--g);font-size:11px;}
+.velocity-stable{color:var(--t3);font-size:11px;}
+.velocity-fading{color:var(--r);font-size:11px;}
+.cluster-tag{background:var(--s2);border:1px solid var(--b);color:var(--t2);font-size:10px;padding:2px 7px;border-radius:20px;}
+.signal-why{font-size:12px;color:var(--t2);margin-bottom:6px;line-height:1.5;}
+.signal-angle{font-size:12px;color:var(--bl);font-style:italic;margin-bottom:10px;padding:8px 10px;border-left:2px solid rgba(96,165,250,.3);background:var(--bld);border-radius:0 var(--rads) var(--rads) 0;}
+.signal-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.signal-source{font-size:11px;color:var(--t3);margin-top:8px;font-family:'DM Mono',monospace;}
+
 .empty{text-align:center;padding:48px 20px;color:var(--t3);}
-@keyframes spin{to{transform:rotate(360deg);}}
-.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--b2);border-top-color:var(--ac);border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:-3px;margin-right:6px;}
-.kv{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--b);font-size:13px;}
-.kv:last-child{border-bottom:none;}
-.kvl{color:var(--t2);flex:1;margin-right:12px;}
-.kvv{color:var(--t);font-weight:500;font-family:'DM Mono',monospace;}
-.cb{margin-bottom:24px;}
-.cbt{font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.8px;color:var(--ac);margin-bottom:10px;}
-#toast{display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--b2);border-radius:var(--rads);padding:10px 18px;font-size:13px;color:var(--t);z-index:200;white-space:nowrap;}
+.empty-icon{font-size:32px;margin-bottom:10px;opacity:.4;}
+.empty-title{font-size:14px;color:var(--t2);margin-bottom:4px;}
+.empty-sub{font-size:12px;}
+
+.loading{text-align:center;padding:32px;color:var(--t3);font-size:13px;}
+
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.toolbar-right{margin-left:auto;display:flex;gap:8px;}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--s);border:1px solid var(--b);border-radius:var(--rad);padding:24px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:18px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;color:var(--t2);margin-bottom:5px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+
+.draft-box{background:var(--s2);border:1px solid var(--b);border-radius:var(--rads);padding:12px;font-size:12px;color:var(--t2);line-height:1.6;white-space:pre-wrap;margin-top:8px;}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--s);border:1px solid var(--b);color:var(--t);padding:10px 16px;border-radius:var(--rad);font-size:13px;z-index:200;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.ok{border-color:rgba(74,222,128,.4);color:var(--g);}
+.toast.err{border-color:rgba(248,113,113,.4);color:var(--r);}
+
+@media(max-width:600px){
+  .sidebar{width:100%;position:relative;height:auto;}
+  .main{margin-left:0;padding:16px;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .shell{flex-direction:column;}
+}
 </style>
 </head>
 <body>
+
 <div class="shell">
-<aside class="sidebar">
-  <div class="logo">
-    <div class="logo-name">Signal Monitor</div>
-    <div class="logo-sub">LinkedIn intelligence</div>
-  </div>
-  <button class="nav-item active" id="nav-signals">Today's signals</button>
-  <button class="nav-item" id="nav-weekly">Weekly summary</button>
-  <button class="nav-item" id="nav-sources">Sources</button>
-  <button class="nav-item" id="nav-archived">Archived</button>
-</aside>
-<main class="main">
-  <div id="page-signals" class="page active">
-    <div class="ph">
-      <div><div class="pt">Today's signals</div><div class="ps" id="sct">Loading...</div></div>
-      <button class="btn btn-p" id="btn-add-signal">+ Add signal</button>
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-name">Signal Monitor</div>
+      <div class="logo-sub">LinkedIn Growth OS</div>
     </div>
-    <div class="dbar">
-      <div class="dlbl"><strong>Morning digest</strong> &mdash; pulls MEED, Construction News, Infrastructure Intelligence automatically</div>
-      <button class="btn btn-g" id="btn-digest">&#8635; Run now</button>
+    <div class="nav">
+      <button class="nav-item active" onclick="showPage('signals')">
+        <span class="nav-icon">⚡</span> Signals
+      </button>
+      <button class="nav-item" onclick="showPage('manual')">
+        <span class="nav-icon">👁</span> Manual Checks
+        <span class="nav-badge" id="nav-due" style="display:none">0</span>
+      </button>
+      <div class="nav-sep"></div>
+      <button class="nav-item" onclick="openAddModal()">
+        <span class="nav-icon">＋</span> Add Signal
+      </button>
+      <button class="nav-item" onclick="runIngest()">
+        <span class="nav-icon">↻</span> Run Now
+      </button>
     </div>
-    <div class="fb" id="uf">
-      <button class="fbn active" data-urgency="all">All</button>
-      <button class="fbn" data-urgency="today">Post today</button>
-      <button class="fbn" data-urgency="this_week">This week</button>
-      <button class="fbn" data-urgency="file">File for later</button>
-    </div>
-    <div id="signals-list"><div class="empty"><p>No signals yet. Hit Run now to pull from your sources.</p></div></div>
-  </div>
-  <div id="page-weekly" class="page">
-    <div class="ph"><div><div class="pt">Weekly summary</div><div class="ps">W/C <span id="wl"></span></div></div></div>
-    <div id="weekly-content"><div class="empty"><p>No signals this week yet.</p></div></div>
-  </div>
-  <div id="page-sources" class="page">
-    <div class="ph">
-      <div><div class="pt">Monitored sources</div><div class="ps">RSS sources run automatically.</div></div>
-      <button class="btn" id="btn-add-source">+ Add source</button>
-    </div>
-    <div class="card" id="sources-list"><div class="empty"><p>Loading...</p></div></div>
-  </div>
-  <div id="page-archived" class="page">
-    <div class="ph"><div><div class="pt">Archived</div></div></div>
-    <div id="archived-list"><div class="empty"><p>No archived signals.</p></div></div>
-  </div>
-</main>
-</div>
+  </nav>
 
-<div id="m-sig" style="display:none">
-  <div class="mo" id="mo-sig">
-    <div class="md">
-      <div class="mtt">Add signal manually</div>
-      <div class="fg">
-        <div class="ff full"><label>Headline</label><input type="text" id="sh" placeholder="e.g. Saudi Arabia fast-tracks NCV accommodation framework"/></div>
-        <div class="ff full"><label>Summary</label><textarea id="ss" placeholder="Paste a few sentences from the article..."></textarea></div>
-        <div class="ff"><label>Source URL</label><input type="text" id="su" placeholder="https://..."/></div>
-        <div class="ff"><label>Published date</label><input type="date" id="sdate"/></div>
-        <div class="ff"><label>Topic cluster</label>
-          <select id="scl">
-            <option value="fifa_2034_saudi">FIFA 2034 / Saudi</option>
-            <option value="programme_delivery">Programme delivery</option>
-            <option value="mega_event_governance">Mega-event governance</option>
-            <option value="deal_origination">Deal origination</option>
-            <option value="operator_business">Operator / business</option>
-            <option value="ai_operational">AI operational</option>
-          </select>
+  <main class="main">
+
+    <!-- SIGNALS PAGE -->
+    <div class="page active" id="page-signals">
+      <div class="page-header">
+        <div class="page-title">Signal Feed</div>
+        <div class="page-meta" id="sig-date"></div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-n" id="st-sources">—</div>
+          <div class="stat-l">Sources</div>
         </div>
-        <div class="ff"><label>Source</label><select id="ssrc"><option value="">No source</option></select></div>
-      </div>
-      <div class="mf">
-        <button class="btn btn-gh" id="btn-cancel-sig">Cancel</button>
-        <button class="btn btn-p" id="btn-save">&#10022; Save and analyse</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="m-src" style="display:none">
-  <div class="mo" id="mo-src">
-    <div class="md">
-      <div class="mtt">Add source</div>
-      <div class="fg">
-        <div class="ff full"><label>Name</label><input type="text" id="srcn" placeholder="e.g. Construction Enquirer"/></div>
-        <div class="ff"><label>Type</label>
-          <select id="srct"><option value="news">News</option><option value="linkedin">LinkedIn</option><option value="report">Report</option><option value="government">Government</option></select>
+        <div class="stat-card">
+          <div class="stat-n" id="st-due" style="color:var(--am)">—</div>
+          <div class="stat-l">Checks Due</div>
         </div>
-        <div class="ff"><label>Topic cluster</label>
-          <select id="srcc">
-            <option value="programme_delivery">Programme delivery</option>
-            <option value="fifa_2034_saudi">FIFA 2034 / Saudi</option>
-            <option value="mega_event_governance">Mega-event governance</option>
-            <option value="deal_origination">Deal origination</option>
-            <option value="operator_business">Operator / business</option>
-            <option value="ai_operational">AI operational</option>
-          </select>
+        <div class="stat-card">
+          <div class="stat-n" id="st-new" style="color:var(--g)">—</div>
+          <div class="stat-l">New Signals</div>
         </div>
-        <div class="ff full"><label>RSS feed URL</label><input type="text" id="srcr" placeholder="https://example.com/feed/"/></div>
-        <div class="ff full"><label>Website URL</label><input type="text" id="srcw" placeholder="https://..."/></div>
+        <div class="stat-card">
+          <div class="stat-n" id="st-today" style="color:var(--r)">—</div>
+          <div class="stat-l">Act Today</div>
+        </div>
       </div>
-      <div class="mf">
-        <button class="btn btn-gh" id="btn-cancel-src">Cancel</button>
-        <button class="btn btn-p" id="btn-save-src">Save source</button>
+
+      <div class="tabs" id="cluster-tabs">
+        <button class="tab active" data-cluster="all">All</button>
+        <button class="tab" data-cluster="fifa_2034_saudi">FIFA 2034</button>
+        <button class="tab" data-cluster="gcc_regional">GCC</button>
+        <button class="tab" data-cluster="programme_delivery">Delivery</button>
+        <button class="tab" data-cluster="deal_origination">Deals</button>
+        <button class="tab" data-cluster="operator_business">Operator</button>
+        <button class="tab" data-cluster="mega_event_governance">Governance</button>
+        <button class="tab" data-cluster="ai_operational">AI</button>
       </div>
+
+      <div id="signals-list" class="signals-list">
+        <div class="loading">Loading signals...</div>
+      </div>
+    </div>
+
+    <!-- MANUAL CHECKS PAGE -->
+    <div class="page" id="page-manual">
+      <div class="page-header">
+        <div class="page-title">Manual Checks</div>
+        <div class="page-meta" id="mc-date"></div>
+      </div>
+
+      <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card">
+          <div class="stat-n" id="mc-pay-count" style="color:var(--r)">—</div>
+          <div class="stat-l">Paywalled Due</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-n" id="mc-rep-count" style="color:var(--bl)">—</div>
+          <div class="stat-l">Report Portals Due</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-n" id="mc-total-count" style="color:var(--am)">—</div>
+          <div class="stat-l">Total Due</div>
+        </div>
+      </div>
+
+      <div class="section-label">Paywalled sources — check every 2 days</div>
+      <div class="checks-card" id="pay-card" style="margin-bottom:20px;">
+        <div class="loading">Loading...</div>
+      </div>
+
+      <div class="section-label">Report portals — check monthly</div>
+      <div class="checks-card" id="rep-card">
+        <div class="loading">Loading...</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ADD SIGNAL MODAL -->
+<div class="modal-overlay" id="m-add">
+  <div class="modal">
+    <div class="modal-title">Add Signal</div>
+    <div class="field"><label>Headline *</label><input type="text" id="add-headline" placeholder="What's the signal?"></div>
+    <div class="field"><label>Summary</label><textarea id="add-summary" placeholder="Brief description of the signal and why it matters..."></textarea></div>
+    <div class="field"><label>Topic Cluster *</label>
+      <select id="add-cluster">
+        <option value="fifa_2034_saudi">FIFA 2034 / Saudi</option>
+        <option value="gcc_regional">GCC Regional</option>
+        <option value="programme_delivery">Programme Delivery</option>
+        <option value="deal_origination">Deal Origination</option>
+        <option value="operator_business">Operator Business</option>
+        <option value="mega_event_governance">Mega-event Governance</option>
+        <option value="ai_operational">AI Operational</option>
+      </select>
+    </div>
+    <div class="field"><label>Source URL</label><input type="text" id="add-url" placeholder="https://..."></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('m-add')">Cancel</button>
+      <button class="btn btn-primary" id="add-btn" onclick="saveSignal()">Save &amp; Analyse</button>
     </div>
   </div>
 </div>
 
-<div id="m-cal" style="display:none">
-  <div class="mo" id="mo-cal">
-    <div class="md">
-      <div class="mtt">Push to content calendar</div>
-      <div class="fg">
-        <div class="ff full"><label>Post title</label><input type="text" id="calt"/></div>
-        <div class="ff"><label>Post type</label><select id="caltype"><option value="post">Short post</option><option value="article">Article</option></select></div>
-        <div class="ff"><label>Project</label><select id="calp"><option value="">No project</option></select></div>
-        <div class="ff full"><label>Notes</label><textarea id="caln"></textarea></div>
-      </div>
-      <div class="mf">
-        <button class="btn btn-gh" id="btn-cancel-cal">Cancel</button>
-        <button class="btn btn-p" id="btn-confirm-push">Add to calendar</button>
-      </div>
+<!-- PUSH TO CALENDAR MODAL -->
+<div class="modal-overlay" id="m-cal">
+  <div class="modal">
+    <div class="modal-title">Push to Calendar</div>
+    <div class="field"><label>Post title *</label><input type="text" id="cal-title"></div>
+    <div class="field"><label>Post type</label>
+      <select id="cal-type">
+        <option value="article">Article</option>
+        <option value="post">Post</option>
+        <option value="poll">Poll</option>
+      </select>
+    </div>
+    <div class="field"><label>Notes / Draft angle</label><textarea id="cal-notes"></textarea></div>
+    <div class="field"><label>Project</label>
+      <select id="cal-project"><option value="">No project</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('m-cal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmPush()">Add to Calendar</button>
     </div>
   </div>
 </div>
 
-<div id="toast"></div>
+<!-- DRAFT MODAL -->
+<div class="modal-overlay" id="m-draft">
+  <div class="modal">
+    <div class="modal-title" id="draft-title">Signal Analysis</div>
+    <div id="draft-body"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('m-draft')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-var SB = 'https://pkfnbxtwgpjqtqwpicax.supabase.co';
-var SK = 'sb_publishable_PkM6hfcVKwEF4F2nOZEssQ_5svjz2E-';
-var AFN = SB + '/functions/v1/analyse-signal';
-var IFN = SB + '/functions/v1/ingest-rss-signals';
-var CL = {
-  fifa_2034_saudi: 'FIFA 2034 / Saudi',
-  programme_delivery: 'Programme delivery',
-  mega_event_governance: 'Mega-event governance',
-  deal_origination: 'Deal origination',
-  operator_business: 'Operator / business',
-  ai_operational: 'AI operational'
+const SB = 'https://pkfnbxtwgpjqtqwpicax.supabase.co/rest/v1';
+const FUNC = 'https://pkfnbxtwgpjqtqwpicax.supabase.co/functions/v1';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrZm5ieHR3Z3BqcXRxd3BpY2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5ODQxODAsImV4cCI6MjA5MzU2MDE4MH0.0CjR9W2yb84_sRJCj6LVrZO1GYXjVNgmQapZHZ26ius';
+const HEADS = {'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'};
+
+const CLUSTERS = {
+  fifa_2034_saudi:'FIFA 2034 · Saudi',
+  gcc_regional:'GCC Regional',
+  programme_delivery:'Programme Delivery',
+  deal_origination:'Deal Origination',
+  operator_business:'Operator Business',
+  mega_event_governance:'Mega-event Gov.',
+  ai_operational:'AI Operational'
 };
-var AS = [], sources = [], projects = [], CF = 'all', PPId = null;
 
-async function sbFetch(path, opts) {
-  opts = opts || {};
-  var res = await fetch(SB + '/rest/v1/' + path, {
-    headers: {
-      'apikey': SK,
-      'Authorization': 'Bearer ' + SK,
-      'Content-Type': 'application/json',
-      'Prefer': opts.prefer || 'return=representation'
-    },
-    method: opts.method || 'GET',
-    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined
-  });
-  if (!res.ok) { var e = await res.text(); throw new Error(e); }
-  if (res.status === 204) return null;
-  return res.json();
+let activeCluster = 'all';
+let pushSignalId = null;
+let allSignals = [];
+let projects = [];
+
+async function api(path, opts={}) {
+  const r = await fetch(SB+path, {headers:HEADS, ...opts});
+  if(!r.ok) throw new Error(await r.text());
+  const t = await r.text();
+  return t ? JSON.parse(t) : [];
 }
 
-async function callFn(url, body) {
-  var res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'apikey': SK, 'Authorization': 'Bearer ' + SK },
-    body: JSON.stringify(body || {})
-  });
-  var d = await res.json();
-  if (d.error) throw new Error(d.error);
-  return d;
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if(p==='manual') loadManualChecks();
 }
 
-function showToast(msg, dur) {
-  var t = document.getElementById('toast');
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
   t.textContent = msg;
-  t.style.display = 'block';
-  clearTimeout(t._tmr);
-  t._tmr = setTimeout(function() { t.style.display = 'none'; }, dur || 3000);
+  t.className = 'toast show' + (type?' '+type:'');
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>t.className='toast',3000);
 }
 
-function showPage(pg) {
-  document.querySelectorAll('.page').forEach(function(x) { x.classList.remove('active'); });
-  document.querySelectorAll('.nav-item').forEach(function(x) { x.classList.remove('active'); });
-  document.getElementById('page-' + pg).classList.add('active');
-  document.getElementById('nav-' + pg).classList.add('active');
-  if (pg === 'sources') loadSources();
-  if (pg === 'archived') loadArchived();
-  if (pg === 'weekly') loadWeekly();
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function openAddModal() { openModal('m-add'); }
+
+function daysSince(ts) {
+  if(!ts) return null;
+  return Math.floor((Date.now()-new Date(ts).getTime())/86400000);
 }
 
-function openModal(id) { document.getElementById(id).style.display = 'block'; }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-function urgencyBadge(u) {
-  var mp = { today: ['bt', 'TODAY'], this_week: ['bw', 'THIS WEEK'], file: ['bf', 'FILE'] };
-  var x = mp[u] || mp['file'];
-  return '<span class="bdg ' + x[0] + '">' + x[1] + '</span>';
+function isOverdue(src) {
+  if(!src.last_checked) return true;
+  return daysSince(src.last_checked) >= src.check_frequency_days;
 }
 
-function statusBadge(s) {
-  var mc = { 'new': 'bn', reviewed: 'brev', actioned: 'bact', dismissed: 'bdis' };
-  return '<span class="bdg ' + (mc[s] || 'bn') + '">' + s.toUpperCase() + '</span>';
+async function loadManualChecks() {
+  const now = new Date();
+  document.getElementById('mc-date').textContent = now.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+
+  const sources = await api('/monitored_sources?deleted_at=is.null&access_type=in.(paywalled,report_portal)&order=name.asc').catch(()=>[]);
+
+  const paywalled = sources.filter(s=>s.access_type==='paywalled');
+  const reports = sources.filter(s=>s.access_type==='report_portal');
+
+  const payDue = paywalled.filter(isOverdue);
+  const repDue = reports.filter(isOverdue);
+  const totalDue = payDue.length + repDue.length;
+
+  document.getElementById('mc-pay-count').textContent = payDue.length;
+  document.getElementById('mc-rep-count').textContent = repDue.length;
+  document.getElementById('mc-total-count').textContent = totalDue;
+
+  const navBadge = document.getElementById('nav-due');
+  if(totalDue > 0) { navBadge.textContent = totalDue; navBadge.style.display = 'inline-block'; }
+  else { navBadge.style.display = 'none'; }
+  document.getElementById('st-due').textContent = totalDue;
+
+  renderCheckGroup('pay-card', payDue, paywalled.length, 'paywalled');
+  renderCheckGroup('rep-card', repDue, reports.length, 'report_portal');
 }
 
-function velocityBadge(v) {
-  var vc = { rising: 'vr', stable: 'vs', fading: 'vf' };
-  return '<span class="vel ' + (vc[v] || 'vs') + '">' + (v || 'stable') + '</span>';
-}
-
-function scoreDots(score) {
-  var h = '<div class="sd">';
-  for (var i = 1; i <= 10; i++) {
-    var c = i <= score ? (score >= 7 ? 'don' : score >= 4 ? 'dmd' : 'dlw') : '';
-    h += '<div class="dot ' + c + '"></div>';
-  }
-  return h + '</div>';
-}
-
-function renderSignals(sigs) {
-  var c = document.getElementById('signals-list');
-  var active = sigs.filter(function(s) { return s.status !== 'dismissed' && s.status !== 'actioned'; });
-  document.getElementById('sct').textContent = active.length + ' active signal' + (active.length !== 1 ? 's' : '');
-  if (!active.length) {
-    c.innerHTML = '<div class="empty"><p>No active signals. Hit Run now or add one manually.</p></div>';
+function renderCheckGroup(cardId, dueList, total, type) {
+  const card = document.getElementById(cardId);
+  if(dueList.length === 0) {
+    card.innerHTML = '<div class="all-clear">✓ All checked — nothing overdue</div>';
     return;
   }
-  c.innerHTML = '';
-  active.forEach(function(s) {
-    var r = s.raw_signal_id_data || {};
-    var hn = '';
-    try { if (r.url) hn = new URL(r.url).hostname; } catch(e) {}
-    var dt = r.published_date ? new Date(r.published_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '';
-    var card = document.createElement('div');
-    card.className = 'sc';
-    var html = '';
-    html += '<div class="smr"><div class="sbd">' + urgencyBadge(s.urgency) + ' ' + statusBadge(s.status) + ' <span class="ctg">' + (CL[r.topic_cluster] || '') + '</span></div>';
-    html += '<div class="sw">' + scoreDots(s.relevance_score || 0) + '<span class="sn">' + (s.relevance_score || '?') + '/10</span></div></div>';
-    html += '<div class="stl">' + (r.headline || 'Untitled') + '</div>';
-    html += '<div class="ssrc">' + (hn ? '<a href="' + r.url + '" target="_blank">' + hn + '</a> &middot; ' : '') + dt + ' &middot; ' + velocityBadge(s.trend_velocity) + '</div>';
-    if (s.why_relevant) html += '<div class="swy">' + s.why_relevant + '</div>';
-    if (s.suggested_angle) html += '<div class="san"><strong>Angle</strong>' + s.suggested_angle + '</div>';
-    if (s.draft_paragraph) html += '<div class="sdr">' + s.draft_paragraph + '</div>';
-    card.innerHTML = html;
-    var actions = document.createElement('div');
-    actions.className = 'sac';
-    var b1 = document.createElement('button'); b1.className = 'btn btn-p'; b1.textContent = 'Push to calendar';
-    b1.addEventListener('click', (function(sig) { return function() { openPushModal(sig); }; })(s));
-    var b2 = document.createElement('button'); b2.className = 'btn'; b2.textContent = 'Mark reviewed';
-    b2.addEventListener('click', (function(id) { return function() { updateStatus(id, 'reviewed'); }; })(s.id));
-    var b3 = document.createElement('button'); b3.className = 'btn btn-d'; b3.textContent = 'Dismiss';
-    b3.addEventListener('click', (function(id) { return function() { updateStatus(id, 'dismissed'); }; })(s.id));
-    actions.appendChild(b1); actions.appendChild(b2); actions.appendChild(b3);
-    card.appendChild(actions);
-    c.appendChild(card);
-  });
+  let html = '';
+  for(const s of dueList) {
+    const days = s.last_checked ? daysSince(s.last_checked) : null;
+    const daysText = days===null ? 'Never checked' : days===0 ? 'Today' : days+'d ago';
+    const badge = type==='paywalled'
+      ? '<span class="badge badge-pay">Paywalled</span>'
+      : '<span class="badge badge-rep">Report portal</span>';
+    const cluster = CLUSTERS[s.topic_cluster] || s.topic_cluster;
+    const openBtn = s.url
+      ? `<a href="${s.url}" target="_blank" rel="noopener"><button class="btn btn-sm btn-open">Open ↗</button></a>`
+      : '';
+    html += `<div class="check-row" id="cr-${s.id}">
+      <span class="check-name">${s.name}</span>
+      <span class="check-cluster">${cluster}</span>
+      ${badge}
+      <span class="check-days">${daysText}</span>
+      ${openBtn}
+      <button class="btn btn-sm btn-check" onclick="markChecked('${s.id}','${cardId}',this)">Mark checked</button>
+    </div>`;
+  }
+  card.innerHTML = html;
+}
+
+async function markChecked(id, cardId, btn) {
+  btn.textContent = '...';
+  btn.disabled = true;
+  await api('/monitored_sources?id=eq.'+id, {
+    method:'PATCH',
+    headers:{...HEADS,'Prefer':'return=minimal'},
+    body:JSON.stringify({last_checked:new Date().toISOString()})
+  }).catch(()=>{});
+  const row = document.getElementById('cr-'+id);
+  if(row){ row.classList.add('done'); setTimeout(()=>{ row.remove(); refreshDueCounts(cardId); },250); }
+  toast('Marked as checked','ok');
+}
+
+function refreshDueCounts(cardId) {
+  const card = document.getElementById(cardId);
+  const rows = card.querySelectorAll('.check-row:not(.done)');
+  if(rows.length===0) card.innerHTML = '<div class="all-clear">✓ All checked — nothing overdue</div>';
+  const payRows = document.getElementById('pay-card').querySelectorAll('.check-row:not(.done)').length;
+  const repRows = document.getElementById('rep-card').querySelectorAll('.check-row:not(.done)').length;
+  const total = payRows + repRows;
+  document.getElementById('mc-pay-count').textContent = payRows;
+  document.getElementById('mc-rep-count').textContent = repRows;
+  document.getElementById('mc-total-count').textContent = total;
+  document.getElementById('st-due').textContent = total;
+  const navBadge = document.getElementById('nav-due');
+  if(total>0){navBadge.textContent=total;navBadge.style.display='inline-block';}
+  else{navBadge.style.display='none';}
 }
 
 async function loadSignals() {
-  try {
-    var p = await sbFetch('processed_signals?select=*,raw_signal_id_data:raw_signals(*)&order=created_at.desc&deleted_at=is.null');
-    AS = (p || []).map(function(s) { return Object.assign({}, s, { raw_signal_id_data: Array.isArray(s.raw_signal_id_data) ? s.raw_signal_id_data[0] : s.raw_signal_id_data }); });
-    renderSignals(CF === 'all' ? AS : AS.filter(function(s) { return s.urgency === CF; }));
-  } catch(e) {
-    document.getElementById('signals-list').innerHTML = '<div class="empty"><p>Load error: ' + e.message + '</p></div>';
+  const el = document.getElementById('signals-list');
+  el.innerHTML = '<div class="loading">Loading signals...</div>';
+  const sigs = await api('/processed_signals?deleted_at=is.null&status=in.(new,reviewed)&order=created_at.desc&limit=50').catch(()=>[]);
+  const rids = sigs.map(s=>s.raw_signal_id).filter(Boolean);
+  let raws = [];
+  if(rids.length) {
+    raws = await api('/raw_signals?id=in.('+rids.join(',')+')').catch(()=>[]);
   }
+  const rawMap = Object.fromEntries(raws.map(r=>[r.id,r]));
+  allSignals = sigs.map(s=>({...s, raw:rawMap[s.raw_signal_id]||{}}));
+  renderSignals();
+  updateStats();
 }
 
-async function runDigest() {
-  var btn = document.getElementById('btn-digest');
-  btn.innerHTML = '<span class="spin"></span>Running...'; btn.disabled = true;
-  try {
-    var r = await callFn(IFN, {});
-    showToast('Complete. ' + (r.processed || 0) + ' new, ' + (r.skipped || 0) + ' skipped.', 5000);
-    await loadSignals();
-  } catch(e) {
-    showToast('Error: ' + e.message, 5000);
-  } finally {
-    btn.innerHTML = '&#8635; Run now'; btn.disabled = false;
+function renderSignals() {
+  const el = document.getElementById('signals-list');
+  const filtered = activeCluster==='all' ? allSignals : allSignals.filter(s=>(s.raw&&s.raw.topic_cluster)===activeCluster);
+  if(!filtered.length){
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📡</div><div class="empty-title">No signals yet</div><div class="empty-sub">Add a signal manually or run the ingest to pull from your open sources.</div></div>';
+    return;
   }
+  el.innerHTML = filtered.map(sig=>{
+    const score = sig.relevance_score||0;
+    const scoreClass = score>=8?'score-high':score>=5?'score-mid':'score-low';
+    const urgEl = sig.urgency==='today'?'<span class="urgency-today">Today</span>':sig.urgency==='this_week'?'<span class="urgency-week">This week</span>':'<span class="urgency-file">File</span>';
+    const velEl = sig.trend_velocity==='rising'?'<span class="velocity-rising">↑ Rising</span>':sig.trend_velocity==='fading'?'<span class="velocity-fading">↓ Fading</span>':'<span class="velocity-stable">→ Stable</span>';
+    const cluster = CLUSTERS[sig.raw&&sig.raw.topic_cluster]||'';
+    return `<div class="signal-card" id="sig-${sig.id}">
+      <div class="signal-top">
+        <span class="signal-score ${scoreClass}">${score}</span>
+        <span class="signal-headline">${sig.raw.headline||'Signal'}</span>
+      </div>
+      <div class="signal-meta">${urgEl}${velEl}<span class="cluster-tag">${cluster}</span></div>
+      ${sig.why_relevant?`<div class="signal-why">${sig.why_relevant}</div>`:''}
+      ${sig.suggested_angle?`<div class="signal-angle">${sig.suggested_angle}</div>`:''}
+      <div class="signal-actions">
+        ${sig.draft_paragraph?`<button class="btn btn-sm" onclick="showDraft('${encodeURIComponent(sig.raw.headline||'')}','${encodeURIComponent(sig.draft_paragraph||'')}')">View draft</button>`:''}
+        <button class="btn btn-sm btn-primary" onclick="openCalModal('${sig.id}','${encodeURIComponent(sig.raw.headline||'')}','${encodeURIComponent(sig.suggested_angle||'')}','${encodeURIComponent(sig.draft_paragraph||'')}')">Push to calendar</button>
+        <button class="btn btn-sm" onclick="dismiss('${sig.id}')">Dismiss</button>
+      </div>
+      ${sig.raw.url?`<div class="signal-source"><a href="${sig.raw.url}" target="_blank" rel="noopener">Source ↗</a></div>`:''}
+    </div>`;
+  }).join('');
 }
 
-async function loadArchived() {
-  try {
-    var p = await sbFetch('processed_signals?select=*,raw_signal_id_data:raw_signals(*)&or=(status.eq.dismissed,status.eq.actioned)&order=created_at.desc&deleted_at=is.null');
-    var sigs = (p || []).map(function(s) { return Object.assign({}, s, { raw_signal_id_data: Array.isArray(s.raw_signal_id_data) ? s.raw_signal_id_data[0] : s.raw_signal_id_data }); });
-    var c = document.getElementById('archived-list');
-    if (!sigs.length) { c.innerHTML = '<div class="empty"><p>No archived signals.</p></div>'; return; }
-    c.innerHTML = '';
-    sigs.forEach(function(s) {
-      var r = s.raw_signal_id_data || {};
-      var dt = r.published_date ? new Date(r.published_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-      var card = document.createElement('div'); card.className = 'sc';
-      card.innerHTML = '<div class="smr"><div class="sbd">' + statusBadge(s.status) + ' ' + urgencyBadge(s.urgency) + '</div></div><div class="stl">' + (r.headline || 'Untitled') + '</div><div class="ssrc">' + dt + '</div>';
-      var rb = document.createElement('button'); rb.className = 'btn'; rb.style.marginTop = '10px'; rb.textContent = 'Restore';
-      rb.addEventListener('click', (function(id) { return function() { updateStatus(id, 'new'); }; })(s.id));
-      card.appendChild(rb); c.appendChild(card);
-    });
-  } catch(e) {
-    document.getElementById('archived-list').innerHTML = '<div class="empty"><p>Error: ' + e.message + '</p></div>';
-  }
+function updateStats() {
+  document.getElementById('st-sources').textContent = '52';
+  document.getElementById('st-new').textContent = allSignals.filter(s=>s.status==='new').length;
+  document.getElementById('st-today').textContent = allSignals.filter(s=>s.urgency==='today').length;
 }
 
-async function loadWeekly() {
-  var n = new Date(), m = new Date(n);
-  m.setDate(n.getDate() - ((n.getDay() + 6) % 7));
-  document.getElementById('wl').textContent = m.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-  try {
-    var p = await sbFetch('processed_signals?select=*,raw_signal_id_data:raw_signals(*)&order=relevance_score.desc&deleted_at=is.null&limit=30');
-    var sigs = (p || []).map(function(s) { return Object.assign({}, s, { raw_signal_id_data: Array.isArray(s.raw_signal_id_data) ? s.raw_signal_id_data[0] : s.raw_signal_id_data }); });
-    var c = document.getElementById('weekly-content');
-    if (!sigs.length) { c.innerHTML = '<div class="empty"><p>No signals yet.</p></div>'; return; }
-    var bc = {};
-    sigs.forEach(function(s) { var cl = (s.raw_signal_id_data && s.raw_signal_id_data.topic_cluster) || 'other'; if (!bc[cl]) bc[cl] = []; bc[cl].push(s); });
-    c.innerHTML = Object.entries(bc).map(function(kv) {
-      return '<div class="cb"><div class="cbt">' + (CL[kv[0]] || kv[0]) + '</div><div class="card">' + kv[1].slice(0, 5).map(function(s) {
-        return '<div class="kv"><span class="kvl">' + ((s.raw_signal_id_data && s.raw_signal_id_data.headline) || 'Signal') + '</span><span class="kvv">' + (s.relevance_score || '?') + '/10</span></div>';
-      }).join('') + '</div></div>';
-    }).join('');
-  } catch(e) {
-    document.getElementById('weekly-content').innerHTML = '<div class="empty"><p>Error: ' + e.message + '</p></div>';
-  }
+function showDraft(h, d) {
+  document.getElementById('draft-title').textContent = decodeURIComponent(h);
+  document.getElementById('draft-body').innerHTML = `<div class="draft-box">${decodeURIComponent(d)}</div>`;
+  openModal('m-draft');
 }
 
-async function loadSources() {
-  try {
-    sources = await sbFetch('monitored_sources?order=name.asc&deleted_at=is.null') || [];
-    var c = document.getElementById('sources-list');
-    if (!sources.length) { c.innerHTML = '<div class="empty"><p>No sources.</p></div>'; return; }
-    c.innerHTML = '';
-    sources.forEach(function(s) {
-      var row = document.createElement('div'); row.className = 'sr';
-      var info = '<div class="sri"><div class="srn">' + s.name + '</div><div class="srm">' + s.source_type + ' &middot; ' + (CL[s.topic_cluster] || s.topic_cluster) + (s.rss_url ? ' &middot; <span style="color:var(--ac)">RSS</span>' : ' &middot; manual') + '</div></div>';
-      if (s.url) info += '<a href="' + s.url + '" target="_blank" class="btn btn-gh" style="padding:4px 8px;font-size:12px">&#8599;</a>';
-      row.innerHTML = info;
-      var tgl = document.createElement('button'); tgl.className = 'tgl ' + (s.active ? 'on' : 'off');
-      tgl.addEventListener('click', (function(id, cur) { return function() { toggleSource(id, cur); }; })(s.id, s.active));
-      row.appendChild(tgl); c.appendChild(row);
-    });
-  } catch(e) {
-    document.getElementById('sources-list').innerHTML = '<div class="empty"><p>Error: ' + e.message + '</p></div>';
-  }
-}
-
-async function toggleSource(id, cur) {
-  await sbFetch('monitored_sources?id=eq.' + id, { method: 'PATCH', body: { active: !cur }, prefer: 'return=minimal' });
-  loadSources();
-}
-
-async function updateStatus(id, status) {
-  await sbFetch('processed_signals?id=eq.' + id, { method: 'PATCH', body: { status: status }, prefer: 'return=minimal' });
-  showToast(status === 'dismissed' ? 'Dismissed' : 'Updated');
-  await loadSignals();
-}
-
-function openAddSignalModal() {
-  document.getElementById('sh').value = '';
-  document.getElementById('ss').value = '';
-  document.getElementById('su').value = '';
-  document.getElementById('sdate').value = new Date().toISOString().split('T')[0];
-  document.getElementById('ssrc').innerHTML = '<option value="">No source</option>' + sources.map(function(s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('');
-  openModal('m-sig');
-}
-
-async function saveAndAnalyse() {
-  var h = document.getElementById('sh').value.trim();
-  var s = document.getElementById('ss').value.trim();
-  if (!h) { showToast('Headline required'); return; }
-  var btn = document.getElementById('btn-save');
-  btn.innerHTML = '<span class="spin"></span>Analysing...'; btn.disabled = true;
-  try {
-    var rr = await sbFetch('raw_signals', { method: 'POST', body: { headline: h, summary: s || null, url: document.getElementById('su').value || null, published_date: document.getElementById('sdate').value || null, topic_cluster: document.getElementById('scl').value, source_id: document.getElementById('ssrc').value || null, raw_payload: { headline: h, summary: s } } });
-    var rid = rr[0].id;
-    var an = await callFn(AFN, { headline: h, summary: s, topic_cluster: document.getElementById('scl').value });
-    await sbFetch('processed_signals', { method: 'POST', body: { raw_signal_id: rid, relevance_score: an.relevance_score, trend_velocity: an.trend_velocity, why_relevant: an.why_relevant, suggested_angle: an.suggested_angle, draft_paragraph: an.draft_paragraph, urgency: an.urgency, status: 'new' } });
-    closeModal('m-sig'); showToast('Saved and analysed'); await loadSignals();
-  } catch(e) {
-    showToast('Error: ' + e.message, 5000);
-  } finally {
-    btn.innerHTML = '&#10022; Save and analyse'; btn.disabled = false;
-  }
-}
-
-async function saveSource() {
-  var n = document.getElementById('srcn').value.trim();
-  if (!n) { showToast('Name required'); return; }
-  await sbFetch('monitored_sources', { method: 'POST', body: { name: n, source_type: document.getElementById('srct').value, topic_cluster: document.getElementById('srcc').value, rss_url: document.getElementById('srcr').value || null, url: document.getElementById('srcw').value || null } });
-  closeModal('m-src'); showToast('Source added'); loadSources();
-}
-
-function openPushModal(s) {
-  var r = s.raw_signal_id_data || {};
-  PPId = s.id;
-  document.getElementById('calt').value = r.headline || '';
-  document.getElementById('caln').value = 'Angle: ' + (s.suggested_angle || '') + '\n\nDraft: ' + (s.draft_paragraph || '');
-  document.getElementById('calp').innerHTML = '<option value="">No project</option>' + projects.map(function(p) { return '<option value="' + p.id + '">' + p.name + '</option>'; }).join('');
+function openCalModal(sigId, h, angle, draft) {
+  pushSignalId = sigId;
+  document.getElementById('cal-title').value = decodeURIComponent(h);
+  document.getElementById('cal-notes').value = 'Angle: '+decodeURIComponent(angle)+'\n\nDraft:\n'+decodeURIComponent(draft);
+  const opts = projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  document.getElementById('cal-project').innerHTML = '<option value="">No project</option>'+opts;
   openModal('m-cal');
 }
 
 async function confirmPush() {
-  var t = document.getElementById('calt').value.trim();
-  if (!t) { showToast('Title required'); return; }
-  await sbFetch('posts', { method: 'POST', body: { title: t, post_type: document.getElementById('caltype').value, status: 'idea', notes: document.getElementById('caln').value, project_id: document.getElementById('calp').value || null } });
-  if (PPId) await sbFetch('processed_signals?id=eq.' + PPId, { method: 'PATCH', body: { status: 'actioned' }, prefer: 'return=minimal' });
-  closeModal('m-cal'); showToast('Added to calendar'); await loadSignals();
+  const title = document.getElementById('cal-title').value.trim();
+  if(!title){toast('Title required','err');return;}
+  await api('/posts',{method:'POST',body:JSON.stringify({
+    title,
+    post_type:document.getElementById('cal-type').value,
+    status:'idea',
+    notes:document.getElementById('cal-notes').value||null,
+    project_id:document.getElementById('cal-project').value||null
+  })});
+  if(pushSignalId) {
+    await api('/processed_signals?id=eq.'+pushSignalId,{method:'PATCH',headers:{...HEADS,'Prefer':'return=minimal'},body:JSON.stringify({status:'actioned'})}).catch(()=>{});
+  }
+  closeModal('m-cal');
+  toast('Added to calendar','ok');
+  await loadSignals();
 }
 
-// Wire up all event listeners after DOM is ready
-document.getElementById('nav-signals').addEventListener('click', function() { showPage('signals'); });
-document.getElementById('nav-weekly').addEventListener('click', function() { showPage('weekly'); });
-document.getElementById('nav-sources').addEventListener('click', function() { showPage('sources'); });
-document.getElementById('nav-archived').addEventListener('click', function() { showPage('archived'); });
-document.getElementById('btn-add-signal').addEventListener('click', openAddSignalModal);
-document.getElementById('btn-digest').addEventListener('click', runDigest);
-document.getElementById('btn-add-source').addEventListener('click', function() { ['srcn','srcr','srcw'].forEach(function(id) { document.getElementById(id).value = ''; }); openModal('m-src'); });
-document.getElementById('btn-save').addEventListener('click', saveAndAnalyse);
-document.getElementById('btn-save-src').addEventListener('click', saveSource);
-document.getElementById('btn-cancel-sig').addEventListener('click', function() { closeModal('m-sig'); });
-document.getElementById('btn-cancel-src').addEventListener('click', function() { closeModal('m-src'); });
-document.getElementById('btn-cancel-cal').addEventListener('click', function() { closeModal('m-cal'); });
-document.getElementById('btn-confirm-push').addEventListener('click', confirmPush);
-document.getElementById('mo-sig').addEventListener('click', function(e) { if (e.target === this) closeModal('m-sig'); });
-document.getElementById('mo-src').addEventListener('click', function(e) { if (e.target === this) closeModal('m-src'); });
-document.getElementById('mo-cal').addEventListener('click', function(e) { if (e.target === this) closeModal('m-cal'); });
+async function saveSignal() {
+  const h = document.getElementById('add-headline').value.trim();
+  if(!h){toast('Headline required','err');return;}
+  const btn = document.getElementById('add-btn');
+  btn.textContent = 'Saving...';btn.disabled=true;
+  const raw = await api('/raw_signals',{method:'POST',body:JSON.stringify({
+    headline:h,
+    summary:document.getElementById('add-summary').value||null,
+    topic_cluster:document.getElementById('add-cluster').value,
+    url:document.getElementById('add-url').value||null,
+    published_date:new Date().toISOString()
+  })});
+  const rid = Array.isArray(raw)?raw[0]?.id:raw?.id;
+  if(rid) {
+    await fetch(FUNC+'/analyse-signal',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+KEY},body:JSON.stringify({raw_signal_id:rid})}).catch(()=>{});
+  }
+  btn.textContent='Save & Analyse';btn.disabled=false;
+  closeModal('m-add');
+  document.getElementById('add-headline').value='';
+  document.getElementById('add-summary').value='';
+  document.getElementById('add-url').value='';
+  toast('Signal saved and analysed','ok');
+  await loadSignals();
+}
 
-document.querySelectorAll('.fbn').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    CF = this.dataset.urgency;
-    document.querySelectorAll('.fbn').forEach(function(b) { b.classList.remove('active'); });
-    this.classList.add('active');
-    renderSignals(CF === 'all' ? AS : AS.filter(function(s) { return s.urgency === CF; }));
+async function dismiss(id) {
+  await api('/processed_signals?id=eq.'+id,{method:'PATCH',headers:{...HEADS,'Prefer':'return=minimal'},body:JSON.stringify({status:'dismissed'})}).catch(()=>{});
+  document.getElementById('sig-'+id)?.remove();
+  toast('Dismissed');
+}
+
+async function runIngest() {
+  toast('Running ingest...');
+  await fetch(FUNC+'/ingest-rss-signals',{method:'POST',headers:{'Authorization':'Bearer '+KEY}}).catch(()=>{});
+  toast('Done — refreshing signals','ok');
+  await loadSignals();
+}
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    activeCluster = tab.dataset.cluster;
+    renderSignals();
   });
 });
 
 async function init() {
-  projects = await sbFetch('projects?order=name.asc').catch(function() { return []; });
-  await Promise.all([loadSignals(), loadSources()]);
+  document.getElementById('sig-date').textContent = new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('mc-date').textContent = new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+  projects = await api('/projects?order=name.asc').catch(()=>[]);
+  await Promise.all([loadSignals(), loadManualChecks()]);
 }
-
 init();
 </script>
 </body>
