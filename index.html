@@ -364,16 +364,28 @@ function toast(msg, type) {
   toastT = setTimeout(function() { el.style.display = 'none'; }, 3500);
 }
 
+function tFetch(url, opts) {
+  var ctrl = new AbortController();
+  var timer = setTimeout(function() { ctrl.abort(); }, 8000);
+  return fetch(url, Object.assign({}, opts, { signal: ctrl.signal }))
+    .then(function(r) { clearTimeout(timer); return r; })
+    .catch(function(e) {
+      clearTimeout(timer);
+      if (e.name === 'AbortError') throw new Error('Request timed out. Edge Tracking Prevention may be blocking Supabase. Try Chrome or Firefox.');
+      throw e;
+    });
+}
+
 async function sb(path, method, body, prefer) {
   var opts = { method: method || 'GET', headers: Object.assign({}, H, { 'Prefer': prefer || 'return=representation' }) };
   if (body !== undefined) opts.body = JSON.stringify(body);
-  var res = await fetch(SUPA_URL + '/rest/v1' + path, opts);
+  var res = await tFetch(SUPA_URL + '/rest/v1' + path, opts);
   if (!res.ok) { var t = await res.text(); throw new Error(t || 'HTTP ' + res.status); }
   try { return await res.json(); } catch(e) { return null; }
 }
 
 async function countOf(path) {
-  var res = await fetch(SUPA_URL + '/rest/v1' + path, { headers: Object.assign({}, H, { 'Prefer': 'count=exact', 'Range': '0-0' }) });
+  var res = await tFetch(SUPA_URL + '/rest/v1' + path, { headers: Object.assign({}, H, { 'Prefer': 'count=exact', 'Range': '0-0' }) });
   var cr = res.headers.get('Content-Range') || '';
   return parseInt((cr.split('/')[1] || '0'), 10) || 0;
 }
@@ -529,163 +541,4 @@ function populateDraft(plan) {
   for (var i = 0; i < hooks.length; i++) {
     hHtml += '<div class="hook-row" onclick="useHook(' + i + ')"><div style="flex:1"><div class="hook-lbl">Hook ' + (lbls[i] || i+1) + '</div><div class="hook-txt">' + hooks[i] + '</div></div><button class="btn btn-ghost btn-sm"><i class="ti ti-corner-up-left"></i></button></div>';
   }
-  document.getElementById('dm-hooks').innerHTML = hHtml;
-
-  var tags = plan.hashtags || [];
-  document.getElementById('dm-tags').innerHTML = tags.map(function(t) { return '<span class="htag" onclick="copyTag(this,\'' + t + '\')">' + t + '</span>'; }).join('');
-
-  var dep = plan.deployment || {};
-  document.getElementById('dp-day').textContent = dep.recommended_day || '-';
-  document.getElementById('dp-time').textContent = (dep.recommended_time || '-') + (dep.time_zone ? ' ' + dep.time_zone : '');
-  document.getElementById('dp-aud1').textContent = dep.primary_audience || '';
-  document.getElementById('dp-aud2').textContent = dep.secondary_audience || '';
-  document.getElementById('dp-rationale').textContent = dep.rationale || '';
-  var acts = dep.post_publish_actions || [], aHtml = '';
-  for (var j = 0; j < acts.length; j++) {
-    aHtml += '<div class="deploy-action"><span class="deploy-n">' + (j+1) + '.</span><span>' + acts[j] + '</span></div>';
-  }
-  document.getElementById('dp-actions').innerHTML = aHtml;
-  document.getElementById('dm-content').classList.add('ready');
-  document.getElementById('dm-footer').style.display = 'flex';
-}
-
-function switchFmt(fmt) {
-  if (!draftPlan) return;
-  draftFmt = fmt;
-  document.querySelectorAll('.fmt-tab').forEach(function(t) { t.classList.remove('active'); });
-  document.querySelector('.fmt-tab[data-fmt="' + fmt + '"]').classList.add('active');
-  var text = '', type = 'post';
-  if (fmt === 'post') { text = (draftPlan.post && draftPlan.post.text) || ''; type = 'post'; }
-  if (fmt === 'article_hook') { text = (draftPlan.article_hook && draftPlan.article_hook.text) || ''; type = 'article'; }
-  if (fmt === 'carousel') { text = (draftPlan.carousel && draftPlan.carousel.text) || ''; type = 'carousel'; }
-  document.getElementById('dm-ta').value = text;
-  document.getElementById('dm-type').value = type;
-  updateCC();
-}
-
-function updateCC() {
-  var ta = document.getElementById('dm-ta'), n = ta.value.length;
-  var el = document.getElementById('dm-cc'), limit = draftFmt === 'post' ? 3000 : null;
-  el.textContent = limit ? (n + ' / ' + limit + ' characters') : (n + ' characters');
-  el.className = 'char-ct' + (limit && n > limit ? ' over' : (limit && n > limit * 0.88 ? ' warn' : ''));
-}
-
-function useHook(i) {
-  if (!draftPlan) return;
-  var hooks = draftPlan.hook_variations || [];
-  if (!hooks[i]) return;
-  var ta = document.getElementById('dm-ta'), lines = ta.value.split('\n'), fi = -1;
-  for (var j = 0; j < lines.length; j++) { if (lines[j].trim()) { fi = j; break; } }
-  if (fi >= 0) lines[fi] = hooks[i]; else lines.unshift(hooks[i]);
-  ta.value = lines.join('\n'); updateCC(); toast('Hook applied', 'ok');
-}
-
-function copyTag(el, tag) {
-  navigator.clipboard.writeText(tag).then(function() { el.classList.add('copied'); setTimeout(function() { el.classList.remove('copied'); }, 1500); });
-}
-
-function copyFullDraft() {
-  var text = document.getElementById('dm-ta').value;
-  var tags = draftPlan && draftPlan.hashtags ? draftPlan.hashtags.join(' ') : '';
-  navigator.clipboard.writeText(text + (tags ? '\n\n' + tags : '')).then(function() { toast('Copied to clipboard', 'ok'); });
-}
-
-async function saveDraft() {
-  if (!draftPlan || !draftId) return;
-  var sig = null;
-  for (var i = 0; i < allSigs.length; i++) { if (allSigs[i].id === draftId) { sig = allSigs[i]; break; } }
-  var hl = (sig && sig.raw_signals && sig.raw_signals.headline) || 'Draft post';
-  var draftText = document.getElementById('dm-ta').value.trim();
-  var postType = document.getElementById('dm-type').value;
-  var dep = (draftPlan && draftPlan.deployment) || {};
-  var tags = draftPlan && draftPlan.hashtags ? draftPlan.hashtags.join(' ') : '';
-  var acts = (dep.post_publish_actions || []).map(function(a, i) { return (i+1) + '. ' + a; });
-  var noteLines = [draftText, '', '-- Deployment plan --',
-    'Day: ' + (dep.recommended_day || '-') + ' at ' + (dep.recommended_time || '-') + (dep.time_zone ? ' ' + dep.time_zone : ''),
-    dep.primary_audience ? 'Primary: ' + dep.primary_audience : null,
-    dep.secondary_audience ? 'Secondary: ' + dep.secondary_audience : null,
-    dep.rationale ? 'Rationale: ' + dep.rationale : null,
-    '', 'Post-publish actions:'].concat(acts);
-  if (tags) noteLines.push('', 'Hashtags: ' + tags);
-  var notes = noteLines.filter(function(l) { return l !== null; }).join('\n').trim();
-  var btn = document.getElementById('dm-save-btn');
-  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Saving...';
-  try {
-    await sb('/posts', 'POST', { title: hl, post_type: postType, status: 'drafted', notes: notes, project_id: null });
-    await sb('/processed_signals?id=eq.' + draftId, 'PATCH', { status: 'actioned' }, 'return=minimal');
-    addHidden(draftId);
-    toast('Saved to calendar as drafted', 'ok'); closeDraft(); await loadSignals();
-  } catch(e) {
-    toast('Save failed: ' + e.message, 'err');
-    btn.disabled = false; btn.innerHTML = '<i class="ti ti-calendar-plus"></i> Save to calendar';
-  }
-}
-
-function closeDraft() { document.getElementById('ov-draft').classList.remove('open'); }
-document.getElementById('ov-draft').addEventListener('click', function(e) { if (e.target === document.getElementById('ov-draft')) closeDraft(); });
-
-function openPush(sig) {
-  pushId = sig.id;
-  var r = sig.raw_signals || {};
-  document.getElementById('push-title').value = r.headline || '';
-  var np = []; if (sig.suggested_angle) np.push('Angle: ' + sig.suggested_angle); if (sig.draft_paragraph) np.push('\nDraft:\n' + sig.draft_paragraph);
-  document.getElementById('push-notes').value = np.join('');
-  var opts = '<option value="">No project</option>';
-  projects.forEach(function(p) { opts += '<option value="' + p.id + '">' + p.name + '</option>'; });
-  document.getElementById('push-project').innerHTML = opts;
-  document.getElementById('ov-push').classList.add('open');
-}
-
-async function confirmPush() {
-  var title = document.getElementById('push-title').value.trim();
-  if (!title) { toast('Title required', 'err'); return; }
-  try {
-    await sb('/posts', 'POST', { title: title, post_type: document.getElementById('push-type').value, status: 'idea', notes: document.getElementById('push-notes').value || null, project_id: document.getElementById('push-project').value || null });
-    if (pushId) { await sb('/processed_signals?id=eq.' + pushId, 'PATCH', { status: 'actioned' }, 'return=minimal'); addHidden(pushId); }
-    toast('Added to calendar', 'ok'); closePush(); await loadSignals();
-  } catch(e) { toast('Failed: ' + e.message, 'err'); }
-}
-
-function closePush() { document.getElementById('ov-push').classList.remove('open'); }
-document.getElementById('ov-push').addEventListener('click', function(e) { if (e.target === document.getElementById('ov-push')) closePush(); });
-
-async function dismiss(id) {
-  addHidden(id);
-  var card = document.getElementById('sig-' + id);
-  if (card) { card.style.opacity = '0'; setTimeout(function() { if (card.parentNode) card.parentNode.removeChild(card); }, 300); }
-  allSigs = allSigs.filter(function(s) { return s.id !== id; });
-  document.getElementById('s-signals').textContent = allSigs.length;
-  buildTabs();
-  try { await sb('/processed_signals?id=eq.' + id, 'PATCH', { status: 'dismissed' }, 'return=minimal'); }
-  catch(e) { console.warn('Dismiss DB:', e.message); }
-}
-
-async function runIngest() {
-  var btn = document.getElementById('btn-ingest');
-  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Ingesting...';
-  toast('Fetching RSS feeds...', 'info');
-  try { var d = await (await fetch(FUNC + '/ingest-rss-signals', { method: 'POST', headers: H })).json(); toast('Ingested ' + (d.inserted || 0) + ' new signals', 'ok'); await loadStats(); }
-  catch(e) { toast('Ingest failed: ' + e.message, 'err'); }
-  btn.disabled = false; btn.innerHTML = '<i class="ti ti-refresh"></i> Ingest';
-}
-
-async function runProcess() {
-  var btn = document.getElementById('btn-process');
-  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Processing...';
-  toast('Analysing signal queue...', 'info');
-  try {
-    var d = await (await fetch(FUNC + '/process-signal-queue', { method: 'POST', headers: H })).json();
-    if (d.error) throw new Error(d.error);
-    if (d.processed === 0) toast('Queue empty - nothing to process', 'info');
-    else { toast('Processed ' + d.processed + ' signals (' + (d.errors || 0) + ' errors)', 'ok'); await Promise.all([loadSignals(), loadStats()]); }
-  } catch(e) { toast('Failed: ' + e.message, 'err'); }
-  btn.disabled = false; btn.innerHTML = '<i class="ti ti-cpu"></i> Process queue';
-}
-
-async function init() {
-  document.getElementById('hdr-date').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-  try { projects = await sb('/projects?order=name.asc') || []; } catch(e) { projects = []; }
-  await Promise.all([loadStats(), loadManualChecks(), loadSignals()]);
-}
-
-init()
+  document.getElementById('dm-hoo
